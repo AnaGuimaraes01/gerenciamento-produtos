@@ -1,0 +1,6 @@
+com\pedidos\util\Conexao.class
+com\pedidos\dao\PedidoDAO.class
+com\pedidos\dao\ClienteDAO.class
+com\pedidos\model\Cliente.class
+com\pedidos\Main.class
+com\pedidos\model\Pedido.class
