@@ -1,4 +1,4 @@
-package main.java.com.pedidos.util;
+package com.pedidos.util;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

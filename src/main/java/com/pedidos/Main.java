@@ -1,4 +1,4 @@
-package main.java.com.pedidos;
+package com.pedidos;
 
 public class Main {
     

@@ -1,4 +1,4 @@
-package main.java.com.pedidos.dao;
+package com.pedidos.dao;
 
 public class PedidoDAO {
     
