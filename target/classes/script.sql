@@ -96,3 +96,20 @@ CREATE OR REPLACE VIEW pedidos_por_status AS
 SELECT status, COUNT(*) AS quantidade
 FROM pedidos
 GROUP BY status;
+
+-- VIEW: exibir as informações dos pedidos feitos
+CREATE OR REPLACE VIEW informacoes_completas_pedidos AS
+SELECT 
+    c.id AS cliente_id,
+    p.id AS pedido_id,
+    p.data_criacao,
+    c.nome AS nome_cliente,
+    pr.nome AS nome_produto,
+    pr.preco AS preco_unitario,
+    ip.quantidade,
+    (ip.quantidade * pr.preco) AS subtotal
+FROM informacoes_pedidos ip
+JOIN pedidos p ON ip.pedido_id = p.id
+JOIN clientes c ON p.cliente_id = c.id
+JOIN produtos pr ON ip.produto_id = pr.id
+ORDER BY p.data_criacao DESC;

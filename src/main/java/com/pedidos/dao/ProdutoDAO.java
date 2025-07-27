@@ -31,14 +31,13 @@ public class ProdutoDAO {
         List<Produto> produtos = new ArrayList<>();
         String sql = "SELECT * FROM produtos ORDER BY id";
         try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+                ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 Produto produto = new Produto(
                         rs.getInt("id"),
                         rs.getString("nome"),
                         rs.getBigDecimal("preco"),
-                        rs.getInt("quantidade")
-                );
+                        rs.getInt("quantidade"));
                 produtos.add(produto);
             }
         } catch (SQLException e) {
