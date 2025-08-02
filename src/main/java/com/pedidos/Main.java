@@ -10,6 +10,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.text.Normalizer;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -49,7 +50,7 @@ public class Main {
         }
     }
 
-    //GERÊNCIA CLIENTES
+    // GERÊNCIA CLIENTES
     private static void menuClientes(Scanner sc, ClienteDAO dao) {
         System.out.println("\n  GERÊNCIA DE CLIENTES");
         System.out.println("1 - Cadastrar");
@@ -68,8 +69,7 @@ public class Main {
                     String email = lerEmail(sc, "Email");
                     String cpf = lerCpf(sc, "CPF");
 
-                    boolean cpfJaExiste = dao.listarClientes().stream()
-                            .anyMatch(c -> c.getCpf().equals(cpf));
+                    boolean cpfJaExiste = dao.listarClientes().stream().anyMatch(c -> c.getCpf().equals(cpf));
                     if (cpfJaExiste) {
                         System.out.println("CPF já cadastrado! Operação cancelada.");
                         return;
@@ -94,13 +94,18 @@ public class Main {
                         System.out.println("Cliente não encontrado!");
                         return;
                     }
-                    System.out.print("Digite o novo email (ou 0 para cancelar): ");
-                    String novoEmail = sc.nextLine();
-                    if (novoEmail.equals("0") || novoEmail.isBlank())
-                        novoEmail = clienteExistente.getEmail();
-                    else if (!novoEmail.matches("^[\\w-.]+@[\\w-]+\\.[A-Za-z]{2,}$")) {
-                        System.out.println("Todos os campos são obrigatórios e devem ser preenchidos corretamente.");
-                        return;
+                    String novoEmail;
+                    while (true) {
+                        System.out.print("Digite o novo email (ou 0 para cancelar): ");
+                        novoEmail = sc.nextLine();
+                        if (novoEmail.equals("0") || novoEmail.isBlank()) {
+                            novoEmail = clienteExistente.getEmail();
+                            break;
+                        } else if (novoEmail.matches("^[\\w-.]+@[\\w-]+\\.[A-Za-z]{2,}$")) {
+                            break;
+                        } else {
+                            System.out.println("E-mail inválido! Digite novamente ou 0 para manter o anterior.");
+                        }
                     }
                     dao.atualizarCliente(new Cliente(0, clienteExistente.getNome(), novoEmail, cpfUpdate));
                     break;
@@ -137,7 +142,7 @@ public class Main {
         dao.listarClientes().forEach(c -> System.out.println(c.getNome() + " | CPF: " + c.getCpf()));
     }
 
-    //GERÊNCIA PRODUTOS
+    // GERÊNCIA PRODUTOS
     private static void menuProdutos(Scanner sc, ProdutoDAO dao) {
         System.out.println("\n  GERÊNCIA DE PRODUTOS");
         System.out.println("1 - Cadastrar");
@@ -164,22 +169,39 @@ public class Main {
                     listarProdutos(dao);
                     System.out.print("ID do produto: ");
                     int idProd = Integer.parseInt(sc.nextLine());
-                    Produto produtoExistente = dao.listarProdutos().stream()
-                            .filter(p -> p.getId() == idProd)
+                    Produto produtoExistente = dao.listarProdutos().stream().filter(p -> p.getId() == idProd)
                             .findFirst().orElse(null);
                     if (produtoExistente == null) {
                         System.out.println("Produto não encontrado!");
                         return;
                     }
-                    System.out.print("Novo preço (S para manter): ");
-                    String inputPreco = sc.nextLine();
-                    if (!inputPreco.equalsIgnoreCase("S"))
-                        produtoExistente.setPreco(new BigDecimal(inputPreco));
+                    while (true) {
+                        System.out.print("Novo preço (S para manter): ");
+                        String inputPreco = sc.nextLine();
+                        if (inputPreco.equalsIgnoreCase("S") || inputPreco.isBlank()) {
+                            break;
+                        }
+                        try {
+                            produtoExistente.setPreco(new BigDecimal(inputPreco));
+                            break;
+                        } catch (Exception e) {
+                            System.out.println("Preço inválido! Digite novamente ou S para manter.");
+                        }
+                    }
 
-                    System.out.print("Nova quantidade (S para manter): ");
-                    String inputQtd = sc.nextLine();
-                    if (!inputQtd.equalsIgnoreCase("S"))
-                        produtoExistente.setQuantidade(Integer.parseInt(inputQtd));
+                    while (true) {
+                        System.out.print("Nova quantidade (S para manter): ");
+                        String inputQtd = sc.nextLine();
+                        if (inputQtd.equalsIgnoreCase("S") || inputQtd.isBlank()) {
+                            break;
+                        }
+                        try {
+                            produtoExistente.setQuantidade(Integer.parseInt(inputQtd));
+                            break;
+                        } catch (Exception e) {
+                            System.out.println("Quantidade inválida! Digite novamente ou S para manter.");
+                        }
+                    }
 
                     dao.atualizarProduto(produtoExistente);
                     break;
@@ -204,15 +226,14 @@ public class Main {
                 p.getId() + " - " + p.getNome() + " | R$" + p.getPreco() + " | Estoque: " + p.getQuantidade()));
     }
 
-    //GERÊNCIA PEDIDOS
+    // GERÊNCIA PEDIDOS
     private static void menuPedidos(Scanner sc, PedidoDAO pedidoDAO, ProdutoDAO produtoDAO, ClienteDAO clienteDAO) {
-        System.out.println("\n  GERÊNCIA DE PEDIDOS");
+        System.out.println("\n GERÊNCIA DE PEDIDOS");
         System.out.println("1 - Cadastrar");
         System.out.println("2 - Listar");
-        System.out.println("3 - Atualizar (Status/Total)");
-        System.out.println("4 - Deletar");
-        System.out.println("5 - Listar Informações Completas (View)");
-        System.out.println("6 - Atualizar Status (Procedure)");
+        System.out.println("3 - Deletar");
+        System.out.println("4 - Listar Informações Completas (View)");
+        System.out.println("5 - Atualizar Status (Procedure)");
         System.out.print("Escolha: ");
         String opcao = sc.nextLine();
 
@@ -220,12 +241,19 @@ public class Main {
             switch (opcao) {
                 case "1": {
                     try {
-                        System.out.println("\nClientes cadastrados:");
-                        clienteDAO.listarClientes().forEach(c -> System.out
-                                .println(c.getId() + " - " + c.getNome() + " | " + c.getEmail() + " | CPF:"
-                                        + c.getCpf()));
+                        listarClientes(clienteDAO);
+                        System.out.print("CPF do cliente (0 para cancelar): ");
+                        String cpf = sc.nextLine();
+                        if (cpf.equals("0"))
+                            return;
 
-                        int clienteId = lerInteiro(sc, "ID do cliente");
+                        Cliente cliente = clienteDAO.listarClientes().stream().filter(c -> c.getCpf().equals(cpf))
+                                .findFirst().orElse(null);
+
+                        if (cliente == null) {
+                            System.out.println("Cliente não encontrado! Operação cancelada.");
+                            return;
+                        }
 
                         List<Produto> produtos = produtoDAO.listarProdutos();
                         if (produtos.isEmpty()) {
@@ -243,16 +271,25 @@ public class Main {
                             if (idProduto == 0)
                                 break;
 
-                            Produto escolhido = produtos.stream()
-                                    .filter(pr -> pr.getId() == idProduto)
-                                    .findFirst().orElse(null);
+                            Produto escolhido = produtos.stream().filter(pr -> pr.getId() == idProduto).findFirst()
+                                    .orElse(null);
 
                             if (escolhido == null) {
                                 System.out.println("Produto inválido!");
                                 continue;
                             }
 
-                            int qtd = lerInteiro(sc, "Quantidade");
+                            int qtd = lerInteiro(sc, "Quantidade (0 para cancelar este produto)");
+                            if (qtd == 0)
+                                continue;
+
+                            if (qtd > escolhido.getQuantidade()) {
+                                System.out
+                                        .println("Quantidade solicitada maior que o estoque disponível! Estoque atual: "
+                                                + escolhido.getQuantidade());
+                                continue;
+                            }
+
                             comprados.add(escolhido);
                             quantidades.add(qtd);
                             total = total.add(escolhido.getPreco().multiply(BigDecimal.valueOf(qtd)));
@@ -262,77 +299,78 @@ public class Main {
                                 break;
                         }
 
+                        if (comprados.isEmpty()) {
+                            System.out.println("Nenhum produto adicionado! Pedido cancelado.");
+                            return;
+                        }
+
                         String codigoPedido = gerarCodigoPedido();
                         System.out.println("Código do pedido: " + codigoPedido);
-                        Pedido pedido = new Pedido(0, clienteId, total, "PENDENTE",
-                                new Timestamp(System.currentTimeMillis()), codigoPedido);
+
+                        java.time.LocalDateTime agora = java.time.LocalDateTime.now().withSecond(0).withNano(0);
+                        Timestamp dataCriacao = Timestamp.valueOf(agora);
+                        Pedido pedido = new Pedido(0, cliente.getId(), total, "PENDENTE", dataCriacao, codigoPedido);
 
                         pedidoDAO.inserirPedido(pedido, comprados, quantidades);
+                        for (int i = 0; i < comprados.size(); i++) {
+                            Produto produto = comprados.get(i);
+                            int quantidadeComprada = quantidades.get(i);
+                            int novoEstoque = produto.getQuantidade() - quantidadeComprada;
+                            produto.setQuantidade(novoEstoque);
+                            produtoDAO.atualizarProduto(produto);
+                        }
                     } catch (Exception e) {
                         System.out.println("Erro ao cadastrar pedido! Voltando ao menu.");
                     }
                     break;
                 }
 
-                case "2": { 
+                case "2": {
                     listarPedidos(pedidoDAO);
                     break;
                 }
 
-                case "3": {
+                case "3": { // DELETAR
                     listarPedidos(pedidoDAO);
-                    System.out.print("Código do pedido: ");
-                    String codigoPedido = sc.nextLine();
-
-                    Pedido pedidoExistente = pedidoDAO.listarPedidos().stream()
-                            .filter(p -> p.getCodigo().equals(codigoPedido))
-                            .findFirst().orElse(null);
-
-                    if (pedidoExistente == null) {
-                        System.out.println("Pedido não encontrado!");
+                    System.out.print("Código do pedido a deletar (0 para cancelar): ");
+                    String codigoDel = sc.nextLine();
+                    if (codigoDel.equals("0"))
                         return;
-                    }
-
-                    System.out.print("Novo status (0 para cancelar): ");
-                    String novoStatus = sc.nextLine();
-                    if (novoStatus.equals("0") || novoStatus.isBlank())
-                        novoStatus = pedidoExistente.getStatus();
-
-                    System.out.print("Novo valor total (0 para cancelar): ");
-                    String inputTotal = sc.nextLine();
-                    BigDecimal novoTotal = pedidoExistente.getValorTotal();
-                    if (!inputTotal.equals("0")) {
-                        try {
-                            novoTotal = new BigDecimal(inputTotal);
-                        } catch (Exception e) {
-                            System.out.println("Valor inválido! Mantendo o total anterior.");
-                        }
-                    }
-
-                    pedidoDAO.atualizarPedido(new Pedido(0, pedidoExistente.getClienteId(),
-                            novoTotal, novoStatus, new Timestamp(System.currentTimeMillis()), codigoPedido));
+                    pedidoDAO.deletarPedido(codigoDel);
                     break;
                 }
 
-                case "4": { 
-                    listarPedidos(pedidoDAO);
-                    System.out.print("Código do pedido a deletar: ");
-                    pedidoDAO.deletarPedido(sc.nextLine());
-                    break;
-                }
-
-                case "5": { //VIEW
+                case "4": { // VIEW COMPLETA
                     pedidoDAO.listarInformacoesCompletasPedidos();
                     break;
                 }
 
-                case "6": { //atualizar status com uso da PROCEDURE
+                case "5": { // PROCEDURE STATUS
                     listarPedidos(pedidoDAO);
-                    System.out.print("Código do pedido: ");
+                    System.out.print("Código do pedido (0 para cancelar): ");
                     String codigo = sc.nextLine();
-                    System.out.print("Novo status: ");
-                    String novoStatus = sc.nextLine();
-                    pedidoDAO.atualizarStatusPedido(codigo, novoStatus);
+                    if (codigo.equals("0"))
+                        return;
+
+                    String novoStatus;
+                    while (true) {
+                        System.out.print("Novo status (concluido/pendente): ");
+                        novoStatus = sc.nextLine().trim();
+
+                        // Remove acentos e converte para minúsculo
+                        String statusNormalizado = Normalizer.normalize(novoStatus, Normalizer.Form.NFD)
+                                .replaceAll("[^\\p{ASCII}]", "")
+                                .toUpperCase();
+
+                        if (statusNormalizado.equals("CONCLUIDO") || statusNormalizado.equals("PENDENTE"))
+                            break;
+                        System.out.println("Status inválido! Use apenas 'concluido' ou 'pendente'.");
+                    }
+                    // Normaliza antes de enviar para o banco
+                    String statusFinal = Normalizer.normalize(novoStatus, Normalizer.Form.NFD)
+                            .replaceAll("[^\\p{ASCII}]", "")
+                            .toUpperCase();
+                    pedidoDAO.atualizarStatusPedido(codigo, statusFinal);
                     break;
                 }
 
@@ -346,9 +384,9 @@ public class Main {
 
     private static void listarPedidos(PedidoDAO dao) {
         System.out.println("\nPedidos cadastrados:");
-        dao.listarPedidos().forEach(p -> System.out.println(p.getCodigo() + " | Cliente ID:" + p.getClienteId() +
-                " | Total: R$" + p.getValorTotal() +
-                " | Status: " + p.getStatus()));
+
+        dao.listarPedidos().forEach(p -> System.out.println("Código: " + p.getCodigo() + " | Cliente ID:"
+                + p.getClienteId() + " | Total: R$" + p.getValorTotal() + " | Status: " + p.getStatus()));
     }
 
     private static String gerarCodigoPedido() {
