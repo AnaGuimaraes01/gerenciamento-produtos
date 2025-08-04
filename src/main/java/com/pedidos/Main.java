@@ -94,6 +94,7 @@ public class Main {
                         System.out.println("Cliente não encontrado!");
                         return;
                     }
+
                     String novoEmail;
                     while (true) {
                         System.out.print("Digite o novo email (ou 0 para cancelar): ");
@@ -112,8 +113,25 @@ public class Main {
 
                 case "4":
                     listarClientes(dao);
-                    System.out.print("\nCPF do cliente a deletar: ");
-                    dao.deletarCliente(sc.nextLine());
+
+                    while (true) {
+                        String cpfDelete = lerCpf(sc, "CPF do cliente a deletar (ou 0 para cancelar)");
+                        if (cpfDelete.equals("0"))
+                            return;
+
+                        Cliente existe = dao.listarClientes().stream()
+                                .filter(c -> c.getCpf().equals(cpfDelete))
+                                .findFirst().orElse(null);
+
+                        if (existe != null) {
+                            dao.deletarCliente(cpfDelete);
+                            break;
+                        } else {
+                            System.out.println(
+                                    "Cliente não encontrado! Todos os campos devem ser preenchidos corretamente.");
+                        }
+                    }
+
                     break;
 
                 case "5":
@@ -167,14 +185,23 @@ public class Main {
 
                 case "3":
                     listarProdutos(dao);
-                    System.out.print("ID do produto: ");
-                    int idProd = Integer.parseInt(sc.nextLine());
-                    Produto produtoExistente = dao.listarProdutos().stream().filter(p -> p.getId() == idProd)
-                            .findFirst().orElse(null);
-                    if (produtoExistente == null) {
-                        System.out.println("Produto não encontrado!");
-                        return;
+
+                    Produto produtoExistente = null;
+                    while (produtoExistente == null) {
+                        int idProd = lerInteiro(sc, "ID do produto (ou 0 para cancelar)");
+                        if (idProd == 0)
+                            return;
+
+                        produtoExistente = dao.listarProdutos().stream()
+                                .filter(p -> p.getId() == idProd)
+                                .findFirst().orElse(null);
+
+                        if (produtoExistente == null) {
+                            System.out.println(
+                                    "Produto não encontrado! Todos os campos devem ser preenchidos corretamente.");
+                        }
                     }
+
                     while (true) {
                         System.out.print("Novo preço (S para manter): ");
                         String inputPreco = sc.nextLine();
@@ -208,8 +235,25 @@ public class Main {
 
                 case "4":
                     listarProdutos(dao);
-                    System.out.print("ID do produto a deletar: ");
-                    dao.deletarProduto(Integer.parseInt(sc.nextLine()));
+
+                    while (true) {
+                        int idProdDel = lerInteiro(sc, "ID do produto a deletar (ou 0 para cancelar)");
+                        if (idProdDel == 0)
+                            return;
+
+                        Produto existe = dao.listarProdutos().stream()
+                                .filter(p -> p.getId() == idProdDel)
+                                .findFirst().orElse(null);
+
+                        if (existe != null) {
+                            dao.deletarProduto(idProdDel);
+                            break;
+                        } else {
+                            System.out.println(
+                                    "Produto não encontrado! Todos os campos devem ser preenchidos corretamente.");
+                        }
+                    }
+
                     break;
 
                 default:
@@ -242,17 +286,24 @@ public class Main {
                 case "1": {
                     try {
                         listarClientes(clienteDAO);
-                        System.out.print("CPF do cliente (0 para cancelar): ");
-                        String cpf = sc.nextLine();
-                        if (cpf.equals("0"))
-                            return;
 
-                        Cliente cliente = clienteDAO.listarClientes().stream().filter(c -> c.getCpf().equals(cpf))
-                                .findFirst().orElse(null);
+                        Cliente cliente = null;
+                        while (true) {
+                            System.out.print("CPF do cliente (0 para cancelar): ");
+                            String cpf = sc.nextLine();
+                            if (cpf.equals("0"))
+                                return;
 
-                        if (cliente == null) {
-                            System.out.println("Cliente não encontrado! Operação cancelada.");
-                            return;
+                            cliente = clienteDAO.listarClientes().stream()
+                                    .filter(c -> c.getCpf().equals(cpf))
+                                    .findFirst().orElse(null);
+
+                            if (cliente == null) {
+                                System.out.println(
+                                        "Todos os campos são obrigatórios e devem ser preenchidos corretamente.");
+                            } else {
+                                break;
+                            }
                         }
 
                         List<Produto> produtos = produtoDAO.listarProdutos();
@@ -332,11 +383,25 @@ public class Main {
 
                 case "3": { // DELETAR
                     listarPedidos(pedidoDAO);
-                    System.out.print("Código do pedido a deletar (0 para cancelar): ");
-                    String codigoDel = sc.nextLine();
-                    if (codigoDel.equals("0"))
-                        return;
-                    pedidoDAO.deletarPedido(codigoDel);
+
+                    while (true) {
+                        System.out.print("Código do pedido a deletar (0 para cancelar): ");
+                        String codigoDel = sc.nextLine();
+                        if (codigoDel.equals("0"))
+                            return;
+
+                        boolean existe = pedidoDAO.listarPedidos().stream()
+                                .anyMatch(p -> p.getCodigo().equals(codigoDel));
+
+                        if (existe) {
+                            pedidoDAO.deletarPedido(codigoDel);
+                            break;
+                        } else {
+                            System.out.println(
+                                    "Pedido não encontrado! Todos os campos devem ser preenchidos corretamente.");
+                        }
+                    }
+
                     break;
                 }
 
