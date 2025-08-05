@@ -7,12 +7,11 @@ import java.util.List;
 
 public class ProdutoDAO {
     private Connection connection;
-
     public ProdutoDAO(Connection connection) {
         this.connection = connection;
     }
 
-    // INSERIR
+    // CRUD abaixo (inserir, listar, atualizar e deletar)
     public void inserirProduto(Produto produto) {
         String sql = "INSERT INTO produtos (nome, preco, quantidade) VALUES (?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -26,7 +25,6 @@ public class ProdutoDAO {
         }
     }
 
-    // LISTAR
     public List<Produto> listarProdutos() {
         List<Produto> produtos = new ArrayList<>();
         String sql = "SELECT * FROM produtos ORDER BY id";
@@ -46,7 +44,6 @@ public class ProdutoDAO {
         return produtos;
     }
 
-    // ATUALIZAR
     public void atualizarProduto(Produto produto) {
         String sql = "UPDATE produtos SET nome = ?, preco = ?, quantidade = ? WHERE id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -66,7 +63,6 @@ public class ProdutoDAO {
         }
     }
 
-    // DELETAR
     public void deletarProduto(int id) {
         String sql = "DELETE FROM produtos WHERE id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {

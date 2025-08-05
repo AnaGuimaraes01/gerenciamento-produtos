@@ -7,7 +7,6 @@ import java.math.BigDecimal;
 import java.util.Scanner;
 
 public class MenuProduto {
-
     public static void exibirMenu(Scanner sc, ProdutoDAO dao) {
         System.out.println("\n  GERÊNCIA DE PRODUTOS");
         System.out.println("1 - Cadastrar");

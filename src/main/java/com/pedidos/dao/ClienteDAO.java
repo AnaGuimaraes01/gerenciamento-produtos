@@ -7,7 +7,6 @@ import java.util.List;
 
 public class ClienteDAO {
     private Connection connection;
-
     public ClienteDAO(Connection connection) {
         this.connection = connection;
     }
@@ -25,7 +24,6 @@ public class ClienteDAO {
             System.out.println("Erro ao cadastrar cliente: " + e.getMessage());
         }
     }
-
 
     public List<Cliente> listarClientes() {
         List<Cliente> clientes = new ArrayList<>();

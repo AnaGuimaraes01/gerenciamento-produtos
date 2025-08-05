@@ -9,7 +9,7 @@ public class Pedido {
     private BigDecimal valorTotal;
     private String status;
     private Timestamp dataCriacao;
-    private String codigo; // adicionando para usar no CRUD
+    private String codigo; 
 
     public Pedido(int id, int clienteId, BigDecimal valorTotal, String status, Timestamp dataCriacao, String codigo) {
         this.id = id;

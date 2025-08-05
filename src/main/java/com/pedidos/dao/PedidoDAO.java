@@ -9,7 +9,6 @@ import java.util.List;
 
 public class PedidoDAO {
     private Connection connection;
-
     public PedidoDAO(Connection connection) {
         this.connection = connection;
     }
@@ -17,12 +16,7 @@ public class PedidoDAO {
     // CRUD abaixo (inserir, listar, atualizar e deletar)
     public void inserirPedido(Pedido pedido, List<Produto> produtosComprados, List<Integer> quantidades) {
         String sqlPedido = "INSERT INTO pedidos (cliente_id, valor_total, status, data_criacao, codigo) VALUES (?, ?, ?, ?, ?) RETURNING id";
-        String sqlInfo = "INSERT INTO informacoes_pedidos (pedido_id, produto_id, quantidade) VALUES (?, ?, ?)"; // necessário
-                                                                                                                 // inserir
-                                                                                                                 // também
-                                                                                                                 // na
-                                                                                                                 // tab
-                                                                                                                 // intermediária
+        String sqlInfo = "INSERT INTO informacoes_pedidos (pedido_id, produto_id, quantidade) VALUES (?, ?, ?)"; // necessário inserir também na tab intermediária
 
         try (PreparedStatement stmtPedido = connection.prepareStatement(sqlPedido)) {
             // Insere o pedido e pega o ID gerado

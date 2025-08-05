@@ -1,11 +1,7 @@
 package com.pedidos.menu;
 
-import com.pedidos.dao.ClienteDAO;
-import com.pedidos.dao.PedidoDAO;
-import com.pedidos.dao.ProdutoDAO;
-import com.pedidos.model.Cliente;
-import com.pedidos.model.Pedido;
-import com.pedidos.model.Produto;
+import com.pedidos.dao.*;
+import com.pedidos.model.*;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -15,7 +11,6 @@ import java.util.List;
 import java.util.Scanner;
 
 public class MenuPedido {
-
     public static void exibirMenu(Scanner sc, PedidoDAO pedidoDAO, ProdutoDAO produtoDAO, ClienteDAO clienteDAO) {
         System.out.println("\n GERÊNCIA DE PEDIDOS");
         System.out.println("1 - Cadastrar");
@@ -102,15 +97,27 @@ public class MenuPedido {
                     continue;
                 }
 
-                int qtd = lerInteiro(sc, "Quantidade (0 para cancelar este produto)");
-                if (qtd == 0)
-                    continue;
-
-                if (qtd > escolhido.getQuantidade()) {
-                    System.out.println("Quantidade solicitada maior que o estoque disponível! Estoque atual: "
-                            + escolhido.getQuantidade());
-                    continue;
+                if (escolhido.getQuantidade() == 0) {
+                    System.out.println("Produto indisponível! Estoque atual: 0");
+                    continue; // pula para o próximo produto sem permitir adicionar
                 }
+
+                int qtd;
+                while (true) {
+                    qtd = lerInteiro(sc, "Quantidade (0 para cancelar este produto)");
+                    if (qtd == 0) {
+                        System.out.println("Produto não adicionado.");
+                        break;
+                    }
+                    if (qtd > escolhido.getQuantidade()) {
+                        System.out.println("Quantidade solicitada maior que o estoque disponível! Estoque atual: "
+                                + escolhido.getQuantidade());
+                    } else {
+                        break; 
+                    }
+                }
+                if (qtd == 0)
+                    continue; 
 
                 comprados.add(escolhido);
                 quantidades.add(qtd);
@@ -138,8 +145,12 @@ public class MenuPedido {
             for (int i = 0; i < comprados.size(); i++) {
                 Produto produto = comprados.get(i);
                 int quantidadeComprada = quantidades.get(i);
-                int novoEstoque = produto.getQuantidade() - quantidadeComprada;
-                produto.setQuantidade(novoEstoque);
+                int estoqueAtual = produto.getQuantidade();
+                if (quantidadeComprada > estoqueAtual) {
+                    System.out.println("Erro: tentativa de subtrair mais produtos do que o disponível! Pedido cancelado.");
+                    return; 
+                }
+                produto.setQuantidade(estoqueAtual - quantidadeComprada);
                 produtoDAO.atualizarProduto(produto);
             }
         } catch (Exception e) {
@@ -177,10 +188,27 @@ public class MenuPedido {
 
     private static void atualizarStatusPedido(Scanner sc, PedidoDAO pedidoDAO) {
         listarPedidos(pedidoDAO);
-        System.out.print("Código do pedido (0 para cancelar): ");
-        String codigo = sc.nextLine();
-        if (codigo.equals("0"))
-            return;
+
+        String codigoPedido;
+        while (true) {
+            System.out.print("Código do pedido (0 para cancelar): ");
+            codigoPedido = sc.nextLine();
+
+            if (codigoPedido.equals("0")) {
+                System.out.println("Operação cancelada.");
+                return;
+            }
+
+            final String codigoCheck = codigoPedido; // variável efetivamente final
+            boolean existe = pedidoDAO.listarPedidos().stream()
+                    .anyMatch(p -> p.getCodigo().equals(codigoCheck));
+
+            if (existe) {
+                break;
+            } else {
+                System.out.println("Pedido não encontrado! Todos os campos devem ser preenchidos corretamente.");
+            }
+        }
 
         String novoStatus;
         while (true) {
@@ -191,19 +219,18 @@ public class MenuPedido {
                     .replaceAll("[^\\p{ASCII}]", "")
                     .toUpperCase();
 
-            if (statusNormalizado.equals("CONCLUIDO") || statusNormalizado.equals("PENDENTE"))
+            if (statusNormalizado.equals("CONCLUIDO") || statusNormalizado.equals("PENDENTE")) {
+                String statusFinal = statusNormalizado;
+                pedidoDAO.atualizarStatusPedido(codigoPedido, statusFinal);
+                System.out.println("Status atualizado com sucesso.");
                 break;
-
-            System.out.println("Status inválido! Use apenas 'concluido' ou 'pendente'.");
+            } else {
+                System.out.println("Status inválido! Use apenas 'concluido' ou 'pendente'.");
+            }
         }
-        String statusFinal = Normalizer.normalize(novoStatus, Normalizer.Form.NFD)
-                .replaceAll("[^\\p{ASCII}]", "")
-                .toUpperCase();
-        pedidoDAO.atualizarStatusPedido(codigo, statusFinal);
     }
 
     // Métodos auxiliares para listar clientes e produtos, reutilizados do menu
-
     private static void listarClientes(ClienteDAO dao) {
         System.out.println("\nClientes cadastrados:");
         dao.listarClientes().forEach(c -> System.out.println(c.getNome() + " | CPF: " + c.getCpf()));
