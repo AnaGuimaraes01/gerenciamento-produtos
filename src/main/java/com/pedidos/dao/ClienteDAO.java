@@ -45,11 +45,10 @@ public class ClienteDAO {
     }
 
     public void atualizarCliente(Cliente cliente) {
-        String sql = "UPDATE clientes SET nome = ?, email = ? WHERE cpf = ?";
+        String sql = "UPDATE clientes SET email = ? WHERE cpf = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, cliente.getNome());
-            stmt.setString(2, cliente.getEmail());
-            stmt.setString(3, cliente.getCpf()); // usa CPF no WHERE
+            stmt.setString(1, cliente.getEmail());
+            stmt.setString(2, cliente.getCpf()); // usa CPF no WHERE
 
             int linhas = stmt.executeUpdate();
 
